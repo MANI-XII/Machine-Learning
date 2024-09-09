@@ -98,6 +98,103 @@ plot_confusion_matrix(cm, classes=target_names)
 plt.show()
 
 
+
+#A2
+import os
+import numpy as np
+from PIL import Image
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
+from math import sqrt
+
+# Define paths to training and testing data
+train_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Training'
+test_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Testing'
+
+# Define classes (subfolders in the directories)
+classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
+
+# Initialize lists to hold feature data (width, height) and labels
+X_train = []
+y_train = []
+X_test = []
+y_test = []
+
+def extract_image_features(image_path):
+    img = Image.open(image_path)
+    img = img.resize((150, 150))  # Resize to a fixed size
+    width, height = img.size
+    return width, height
+
+# Process training images
+for label, class_name in enumerate(classes):
+    class_dir = os.path.join(train_dir, class_name)
+    images = os.listdir(class_dir)
+    
+    for image_name in images:
+        image_path = os.path.join(class_dir, image_name)
+        width, height = extract_image_features(image_path)
+        X_train.append([width, height])  # Use width and height as features
+        y_train.append(label)
+
+# Process testing images
+for label, class_name in enumerate(classes):
+    class_dir = os.path.join(test_dir, class_name)
+    images = os.listdir(class_dir)
+    
+    for image_name in images:
+        image_path = os.path.join(class_dir, image_name)
+        width, height = extract_image_features(image_path)
+        X_test.append([width, height])  # Use width and height as features
+        y_test.append(label)
+
+# Convert lists to NumPy arrays
+X_train = np.array(X_train)
+y_train = np.array(y_train)
+X_test = np.array(X_test)
+y_test = np.array(y_test)
+
+# Standardize features
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Train a linear regression model
+reg = LinearRegression().fit(X_train_scaled, y_train)
+
+# Predict on training and testing data
+y_train_pred = reg.predict(X_train_scaled)
+y_test_pred = reg.predict(X_test_scaled)
+
+# Calculate metrics for training data
+mse_train = mean_squared_error(y_train, y_train_pred)
+rmse_train = sqrt(mse_train)
+mape_train = mean_absolute_percentage_error(y_train, y_train_pred)
+r2_train = r2_score(y_train, y_train_pred)
+
+# Calculate metrics for testing data
+mse_test = mean_squared_error(y_test, y_test_pred)
+rmse_test = sqrt(mse_test)
+mape_test = mean_absolute_percentage_error(y_test, y_test_pred)
+r2_test = r2_score(y_test, y_test_pred)
+
+# Print metrics
+print("Training Metrics:")
+print(f"MSE: {mse_train:.4f}")
+print(f"RMSE: {rmse_train:.4f}")
+print(f"MAPE: {mape_train:.4f}")
+print(f"R²: {r2_train:.4f}")
+
+print("\nTesting Metrics:")
+print(f"MSE: {mse_test:.4f}")
+print(f"RMSE: {rmse_test:.4f}")
+print(f"MAPE: {mape_test:.4f}")
+print(f"R²: {r2_test:.4f}")
+
+
+
 #A3
 import os
 import numpy as np
