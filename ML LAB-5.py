@@ -1,480 +1,609 @@
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": 10,
-   "id": "2913fdf7-6ad1-4d14-a425-e6440ab18e11",
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Found 2870 images belonging to 4 classes.\n",
-      "Found 394 images belonging to 4 classes.\n",
-      "Epoch 1/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m147s\u001b[0m 1s/step - accuracy: 0.3289 - loss: 1.3628 - val_accuracy: 0.2538 - val_loss: 1.7393\n",
-      "Epoch 2/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m86s\u001b[0m 897ms/step - accuracy: 0.4646 - loss: 1.1768 - val_accuracy: 0.2970 - val_loss: 2.1856\n",
-      "Epoch 3/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m81s\u001b[0m 849ms/step - accuracy: 0.5284 - loss: 1.0725 - val_accuracy: 0.3020 - val_loss: 2.7089\n",
-      "Epoch 4/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m83s\u001b[0m 870ms/step - accuracy: 0.5644 - loss: 0.9870 - val_accuracy: 0.2868 - val_loss: 4.6463\n",
-      "Epoch 5/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m82s\u001b[0m 864ms/step - accuracy: 0.6027 - loss: 0.9130 - val_accuracy: 0.2868 - val_loss: 3.3235\n",
-      "Epoch 6/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m80s\u001b[0m 837ms/step - accuracy: 0.6261 - loss: 0.8835 - val_accuracy: 0.3452 - val_loss: 3.0273\n",
-      "Epoch 7/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m81s\u001b[0m 847ms/step - accuracy: 0.6173 - loss: 0.8846 - val_accuracy: 0.3706 - val_loss: 3.1109\n",
-      "Epoch 8/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m19156s\u001b[0m 215s/step - accuracy: 0.6363 - loss: 0.8354 - val_accuracy: 0.3579 - val_loss: 3.2953\n",
-      "Epoch 9/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m565s\u001b[0m 6s/step - accuracy: 0.6613 - loss: 0.7758 - val_accuracy: 0.3376 - val_loss: 3.3013\n",
-      "Epoch 10/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m88s\u001b[0m 919ms/step - accuracy: 0.6549 - loss: 0.7834 - val_accuracy: 0.3096 - val_loss: 3.8622\n",
-      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m3s\u001b[0m 242ms/step - accuracy: 0.2848 - loss: 4.3249\n",
-      "Test accuracy: 0.31\n"
-     ]
-    }
-   ],
-   "source": [
-    "#A1\n",
-    "import os\n",
-    "import numpy as np\n",
-    "import tensorflow as tf\n",
-    "from tensorflow.keras.preprocessing.image import ImageDataGenerator\n",
-    "from tensorflow.keras.models import Sequential\n",
-    "from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout\n",
-    "\n",
-    "# Set up paths (ensure these paths point to the extracted folders)\n",
-    "train_dir = r'C:\\Users\\manik\\OneDrive\\Desktop\\ML DATASET\\Brain-Tumor-Classification-DataSet-master\\Training'\n",
-    "test_dir = r'C:\\Users\\manik\\OneDrive\\Desktop\\ML DATASET\\Brain-Tumor-Classification-DataSet-master\\Testing'\n",
-    "\n",
-    "# ImageDataGenerator for preprocessing images\n",
-    "train_datagen = ImageDataGenerator(rescale=1.0/255.0,\n",
-    "                                   rotation_range=20,\n",
-    "                                   width_shift_range=0.2,\n",
-    "                                   height_shift_range=0.2,\n",
-    "                                   shear_range=0.2,\n",
-    "                                   zoom_range=0.2,\n",
-    "                                   horizontal_flip=True,\n",
-    "                                   fill_mode='nearest')\n",
-    "\n",
-    "test_datagen = ImageDataGenerator(rescale=1.0/255.0)\n",
-    "\n",
-    "# Load train and test datasets\n",
-    "train_generator = train_datagen.flow_from_directory(train_dir,\n",
-    "                                                    target_size=(150, 150),\n",
-    "                                                    batch_size=32,\n",
-    "                                                    class_mode='categorical')\n",
-    "\n",
-    "test_generator = test_datagen.flow_from_directory(test_dir,\n",
-    "                                                  target_size=(150, 150),\n",
-    "                                                  batch_size=32,\n",
-    "                                                  class_mode='categorical')\n",
-    "\n",
-    "# Build the CNN model\n",
-    "model = Sequential([\n",
-    "    Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),\n",
-    "    MaxPooling2D(pool_size=(2, 2)),\n",
-    "    \n",
-    "    Conv2D(64, (3, 3), activation='relu'),\n",
-    "    MaxPooling2D(pool_size=(2, 2)),\n",
-    "    \n",
-    "    Conv2D(128, (3, 3), activation='relu'),\n",
-    "    MaxPooling2D(pool_size=(2, 2)),\n",
-    "    \n",
-    "    Flatten(),\n",
-    "    Dense(128, activation='relu'),\n",
-    "    Dropout(0.5),\n",
-    "    Dense(4, activation='softmax')  # 4 output classes (glioma, meningioma, notumor, pituitary)\n",
-    "])\n",
-    "\n",
-    "# Compile the model\n",
-    "model.compile(optimizer='adam',\n",
-    "              loss='categorical_crossentropy',\n",
-    "              metrics=['accuracy'])\n",
-    "\n",
-    "# Train the model\n",
-    "history = model.fit(train_generator,\n",
-    "                    epochs=10,\n",
-    "                    validation_data=test_generator)\n",
-    "\n",
-    "# Evaluate the model\n",
-    "test_loss, test_acc = model.evaluate(test_generator)\n",
-    "print(f'Test accuracy: {test_acc:.2f}')\n"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 16,
-   "id": "617b5644-fd1d-47b5-83fe-8cb5be3f2b01",
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Found 2870 images belonging to 4 classes.\n",
-      "Found 394 images belonging to 4 classes.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "C:\\anaconda\\Lib\\site-packages\\keras\\src\\layers\\convolutional\\base_conv.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.\n",
-      "  super().__init__(activity_regularizer=activity_regularizer, **kwargs)\n"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Epoch 1/10\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "C:\\anaconda\\Lib\\site-packages\\keras\\src\\trainers\\data_adapters\\py_dataset_adapter.py:122: UserWarning: Your `PyDataset` class should call `super().__init__(**kwargs)` in its constructor. `**kwargs` can include `workers`, `use_multiprocessing`, `max_queue_size`. Do not pass these arguments to `fit()`, as they will be ignored.\n",
-      "  self._warn_if_super_not_called()\n"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m52s\u001b[0m 498ms/step - accuracy: 0.4647 - loss: 1.2145 - val_accuracy: 0.3299 - val_loss: 2.3540\n",
-      "Epoch 2/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m35s\u001b[0m 371ms/step - accuracy: 0.6753 - loss: 0.7613 - val_accuracy: 0.4442 - val_loss: 1.9114\n",
-      "Epoch 3/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m29s\u001b[0m 308ms/step - accuracy: 0.7618 - loss: 0.5731 - val_accuracy: 0.5228 - val_loss: 1.6522\n",
-      "Epoch 4/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m31s\u001b[0m 335ms/step - accuracy: 0.7839 - loss: 0.4954 - val_accuracy: 0.5406 - val_loss: 2.5622\n",
-      "Epoch 5/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m37s\u001b[0m 393ms/step - accuracy: 0.8530 - loss: 0.3524 - val_accuracy: 0.5838 - val_loss: 2.7144\n",
-      "Epoch 6/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m32s\u001b[0m 350ms/step - accuracy: 0.8683 - loss: 0.3268 - val_accuracy: 0.6574 - val_loss: 2.7885\n",
-      "Epoch 7/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m36s\u001b[0m 387ms/step - accuracy: 0.9056 - loss: 0.2566 - val_accuracy: 0.6650 - val_loss: 3.0506\n",
-      "Epoch 8/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m38s\u001b[0m 400ms/step - accuracy: 0.9188 - loss: 0.2141 - val_accuracy: 0.6675 - val_loss: 3.5034\n",
-      "Epoch 9/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m40s\u001b[0m 437ms/step - accuracy: 0.9297 - loss: 0.1770 - val_accuracy: 0.6904 - val_loss: 3.0402\n",
-      "Epoch 10/10\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m37s\u001b[0m 398ms/step - accuracy: 0.9438 - loss: 0.1409 - val_accuracy: 0.7005 - val_loss: 3.3638\n",
-      "\u001b[1m90/90\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m18s\u001b[0m 201ms/step\n",
-      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 158ms/step\n",
-      "Train Metrics:\n",
-      "Accuracy: 0.26\n",
-      "Classification Report:\n",
-      "{'0': {'precision': 0.28151774785801714, 'recall': 0.2784503631961259, 'f1-score': 0.27997565429093124, 'support': 826.0}, '1': {'precision': 0.2888086642599278, 'recall': 0.291970802919708, 'f1-score': 0.29038112522686027, 'support': 822.0}, '2': {'precision': 0.1388888888888889, 'recall': 0.13924050632911392, 'f1-score': 0.1390644753476612, 'support': 395.0}, '3': {'precision': 0.27602905569007263, 'recall': 0.2756952841596131, 'f1-score': 0.27586206896551724, 'support': 827.0}, 'accuracy': 0.26236933797909406, 'macro avg': {'precision': 0.24631108917422662, 'recall': 0.24633923915114023, 'f1-score': 0.2463208309577425, 'support': 2870.0}, 'weighted avg': {'precision': 0.26239425850842646, 'recall': 0.26236933797909406, 'f1-score': 0.26237685511414544, 'support': 2870.0}}\n",
-      "\n",
-      "Test Metrics:\n",
-      "Accuracy: 0.70\n",
-      "Classification Report:\n",
-      "{'0': {'precision': 0.8947368421052632, 'recall': 0.17, 'f1-score': 0.2857142857142857, 'support': 100.0}, '1': {'precision': 0.6625766871165644, 'recall': 0.9391304347826087, 'f1-score': 0.7769784172661871, 'support': 115.0}, '2': {'precision': 0.6481481481481481, 'recall': 1.0, 'f1-score': 0.7865168539325843, 'support': 105.0}, '3': {'precision': 0.92, 'recall': 0.6216216216216216, 'f1-score': 0.7419354838709677, 'support': 74.0}, 'accuracy': 0.700507614213198, 'macro avg': {'precision': 0.7813654193424939, 'recall': 0.6826880141010575, 'f1-score': 0.6477862601960063, 'support': 394.0}, 'weighted avg': {'precision': 0.766003956305804, 'recall': 0.700507614213198, 'f1-score': 0.6482523909299823, 'support': 394.0}}\n"
-     ]
-    }
-   ],
-   "source": [
-    "#A2\n",
-    "import numpy as np\n",
-    "from tensorflow.keras.preprocessing.image import ImageDataGenerator\n",
-    "from tensorflow.keras.models import Sequential\n",
-    "from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout\n",
-    "from tensorflow.keras.optimizers import Adam\n",
-    "from sklearn.metrics import accuracy_score, classification_report\n",
-    "\n",
-    "# Update these paths with the actual paths to your directories\n",
-    "train_directory = r'C:\\Users\\manik\\OneDrive\\Desktop\\ML DATASET\\Brain-Tumor-Classification-DataSet-master\\Training'\n",
-    "test_directory = r'C:\\Users\\manik\\OneDrive\\Desktop\\ML DATASET\\Brain-Tumor-Classification-DataSet-master\\Testing'\n",
-    "\n",
-    "# Initialize the data generators\n",
-    "train_datagen = ImageDataGenerator(rescale=1./255)\n",
-    "test_datagen = ImageDataGenerator(rescale=1./255)\n",
-    "\n",
-    "train_generator = train_datagen.flow_from_directory(\n",
-    "    train_directory,\n",
-    "    target_size=(150, 150),\n",
-    "    batch_size=32,\n",
-    "    class_mode='categorical',\n",
-    "    shuffle=True  # Shuffle the data during training\n",
-    ")\n",
-    "\n",
-    "test_generator = test_datagen.flow_from_directory(\n",
-    "    test_directory,\n",
-    "    target_size=(150, 150),\n",
-    "    batch_size=32,\n",
-    "    class_mode='categorical',\n",
-    "    shuffle=False  # Do not shuffle for evaluation\n",
-    ")\n",
-    "\n",
-    "# Define the CNN model\n",
-    "model = Sequential([\n",
-    "    Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),\n",
-    "    MaxPooling2D(pool_size=(2, 2)),\n",
-    "    \n",
-    "    Conv2D(64, (3, 3), activation='relu'),\n",
-    "    MaxPooling2D(pool_size=(2, 2)),\n",
-    "    \n",
-    "    Conv2D(128, (3, 3), activation='relu'),\n",
-    "    MaxPooling2D(pool_size=(2, 2)),\n",
-    "    \n",
-    "    Flatten(),\n",
-    "    Dense(128, activation='relu'),\n",
-    "    Dropout(0.5),\n",
-    "    Dense(train_generator.num_classes, activation='softmax')\n",
-    "])\n",
-    "\n",
-    "# Compile the model\n",
-    "model.compile(optimizer=Adam(learning_rate=0.001),\n",
-    "              loss='categorical_crossentropy',\n",
-    "              metrics=['accuracy'])\n",
-    "\n",
-    "# Train the model\n",
-    "epochs = 10\n",
-    "history = model.fit(train_generator, epochs=epochs, validation_data=test_generator)\n",
-    "\n",
-    "# Perform predictions on the train and test sets\n",
-    "y_train_pred = model.predict(train_generator)\n",
-    "y_test_pred = model.predict(test_generator)\n",
-    "\n",
-    "# Extract true labels\n",
-    "y_train_true = train_generator.classes\n",
-    "y_test_true = test_generator.classes\n",
-    "\n",
-    "# Convert predictions to class labels\n",
-    "y_train_pred_classes = np.argmax(y_train_pred, axis=1)\n",
-    "y_test_pred_classes = np.argmax(y_test_pred, axis=1)\n",
-    "\n",
-    "# Calculate classification metrics for the train set\n",
-    "train_accuracy = accuracy_score(y_train_true, y_train_pred_classes)\n",
-    "train_report = classification_report(y_train_true, y_train_pred_classes, output_dict=True)\n",
-    "\n",
-    "# Calculate classification metrics for the test set\n",
-    "test_accuracy = accuracy_score(y_test_true, y_test_pred_classes)\n",
-    "test_report = classification_report(y_test_true, y_test_pred_classes, output_dict=True)\n",
-    "\n",
-    "# Display the metrics\n",
-    "print(\"Train Metrics:\")\n",
-    "print(f\"Accuracy: {train_accuracy:.2f}\")\n",
-    "print(f\"Classification Report:\\n{train_report}\")\n",
-    "\n",
-    "print(\"\\nTest Metrics:\")\n",
-    "print(f\"Accuracy: {test_accuracy:.2f}\")\n",
-    "print(f\"Classification Report:\\n{test_report}\")\n"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "f66f31c7-6874-4645-9c47-4a8b0c77d9e1",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "pip install tensorflow scikit-learn\n"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 19,
-   "id": "c72a82b9-c756-491b-9460-852700cc7492",
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Found 2870 images belonging to 4 classes.\n",
-      "Found 394 images belonging to 4 classes.\n"
-     ]
-    }
-   ],
-   "source": [
-    "#A4\n",
-    "from tensorflow.keras.preprocessing.image import ImageDataGenerator\n",
-    "from sklearn.metrics import accuracy_score, classification_report\n",
-    "import numpy as np\n",
-    "\n",
-    "# Initialize the data generators\n",
-    "train_datagen = ImageDataGenerator(rescale=1./255)\n",
-    "test_datagen = ImageDataGenerator(rescale=1./255)\n",
-    "\n",
-    "# Replace these with the actual paths to your training and test directories\n",
-    "train_directory = r'C:\\Users\\manik\\OneDrive\\Desktop\\ML DATASET\\Brain-Tumor-Classification-DataSet-master\\Training'\n",
-    "test_directory = r'C:\\Users\\manik\\OneDrive\\Desktop\\ML DATASET\\Brain-Tumor-Classification-DataSet-master\\Testing'\n",
-    "\n",
-    "# Flow from the correct directory\n",
-    "train_generator = train_datagen.flow_from_directory(\n",
-    "    train_directory,  # Updated with actual path\n",
-    "    target_size=(150, 150),\n",
-    "    batch_size=32,\n",
-    "    class_mode='categorical',\n",
-    "    shuffle=False  # Ensure the order of data is preserved for evaluation\n",
-    ")\n",
-    "\n",
-    "test_generator = test_datagen.flow_from_directory(\n",
-    "    test_directory,  # Updated with actual path\n",
-    "    target_size=(150, 150),\n",
-    "    batch_size=32,\n",
-    "    class_mode='categorical',\n",
-    "    shuffle=False  # Ensure the order of data is preserved for evaluation\n",
-    ")\n",
-    "\n",
-    "# You can now proceed with training your model or loading an existing one.\n"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 11,
-   "id": "cd79f542-f413-4e82-bf79-8ee4c28d206a",
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Found 2870 images belonging to 4 classes.\n",
-      "Found 394 images belonging to 4 classes.\n"
-     ]
-    },
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "C:\\anaconda\\Lib\\site-packages\\sklearn\\cluster\\_kmeans.py:1446: UserWarning: KMeans is known to have a memory leak on Windows with MKL, when there are less chunks than available threads. You can avoid it by setting the environment variable OMP_NUM_THREADS=2.\n",
-      "  warnings.warn(\n"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Training Data Metrics:\n",
-      "Silhouette Score: 0.1316\n",
-      "Calinski-Harabasz (CH) Score: 385.6659\n",
-      "Davies-Bouldin (DB) Index: 2.6382\n",
-      "\n",
-      "Testing Data Metrics:\n",
-      "Silhouette Score: 0.1373\n",
-      "Calinski-Harabasz (CH) Score: 63.1492\n",
-      "Davies-Bouldin (DB) Index: 2.4095\n"
-     ]
-    }
-   ],
-   "source": [
-    "#A5\n",
-    "import numpy as np\n",
-    "from sklearn.cluster import KMeans\n",
-    "from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score\n",
-    "from tensorflow.keras.preprocessing.image import ImageDataGenerator\n",
-    "import zipfile\n",
-    "import os\n",
-    "\n",
-    "# Path to the uploaded ZIP file\n",
-    "zip_path = r'C:\\Users\\manik\\OneDrive\\Desktop\\ML DATASET.zip'\n",
-    "\n",
-    "# Extract the zip file to access the data\n",
-    "with zipfile.ZipFile(zip_path, 'r') as zip_ref:\n",
-    "    zip_ref.extractall('/mnt/data/')\n",
-    "\n",
-    "# Set up the directories for the extracted Training and Testing data\n",
-    "train_dir = r'C:\\Users\\manik\\OneDrive\\Desktop\\ML DATASET\\Brain-Tumor-Classification-DataSet-master\\Training'\n",
-    "test_dir = r'C:\\Users\\manik\\OneDrive\\Desktop\\ML DATASET\\Brain-Tumor-Classification-DataSet-master\\Testing'\n",
-    "\n",
-    "\n",
-    "# ImageDataGenerator to load images (without augmentation, only rescaling)\n",
-    "datagen = ImageDataGenerator(rescale=1.0/255.0)\n",
-    "\n",
-    "# Load training dataset (without the target labels)\n",
-    "train_generator = datagen.flow_from_directory(train_dir,\n",
-    "                                              target_size=(150, 150),\n",
-    "                                              batch_size=32,\n",
-    "                                              class_mode=None,  # We ignore labels\n",
-    "                                              shuffle=False)\n",
-    "\n",
-    "# Load testing dataset (without the target labels)\n",
-    "test_generator = datagen.flow_from_directory(test_dir,\n",
-    "                                             target_size=(150, 150),\n",
-    "                                             batch_size=32,\n",
-    "                                             class_mode=None,  # We ignore labels\n",
-    "                                             shuffle=False)\n",
-    "\n",
-    "# Function to extract features and flatten images\n",
-    "def extract_and_flatten(generator):\n",
-    "    X_data = []\n",
-    "    for i in range(len(generator)):\n",
-    "        batch = generator[i]  # Get the images (ignore labels)\n",
-    "        X_data.append(batch)\n",
-    "    # Convert list of batches into a single array\n",
-    "    X_data = np.vstack(X_data)\n",
-    "    # Flatten each image into a 1D array\n",
-    "    X_data_flat = X_data.reshape(X_data.shape[0], -1)\n",
-    "    return X_data_flat\n",
-    "\n",
-    "# Extract features for training and testing datasets\n",
-    "X_train_flat = extract_and_flatten(train_generator)\n",
-    "X_test_flat = extract_and_flatten(test_generator)\n",
-    "\n",
-    "# Perform K-Means clustering for training data\n",
-    "kmeans_train = KMeans(n_clusters=2, random_state=42, n_init=\"auto\").fit(X_train_flat)\n",
-    "\n",
-    "# Perform K-Means clustering for testing data\n",
-    "kmeans_test = KMeans(n_clusters=2, random_state=42, n_init=\"auto\").fit(X_test_flat)\n",
-    "\n",
-    "# Calculate metrics for training data\n",
-    "silhouette_train = silhouette_score(X_train_flat, kmeans_train.labels_)\n",
-    "ch_train = calinski_harabasz_score(X_train_flat, kmeans_train.labels_)\n",
-    "db_train = davies_bouldin_score(X_train_flat, kmeans_train.labels_)\n",
-    "\n",
-    "# Calculate metrics for testing data\n",
-    "silhouette_test = silhouette_score(X_test_flat, kmeans_test.labels_)\n",
-    "ch_test = calinski_harabasz_score(X_test_flat, kmeans_test.labels_)\n",
-    "db_test = davies_bouldin_score(X_test_flat, kmeans_test.labels_)\n",
-    "\n",
-    "# Print the results\n",
-    "print(\"Training Data Metrics:\")\n",
-    "print(f\"Silhouette Score: {silhouette_train:.4f}\")\n",
-    "print(f\"Calinski-Harabasz (CH) Score: {ch_train:.4f}\")\n",
-    "print(f\"Davies-Bouldin (DB) Index: {db_train:.4f}\")\n",
-    "\n",
-    "print(\"\\nTesting Data Metrics:\")\n",
-    "print(f\"Silhouette Score: {silhouette_test:.4f}\")\n",
-    "print(f\"Calinski-Harabasz (CH) Score: {ch_test:.4f}\")\n",
-    "print(f\"Davies-Bouldin (DB) Index: {db_test:.4f}\")\n"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "29fc4028-1e8d-430a-b002-2e8273c92825",
-   "metadata": {},
-   "outputs": [],
-   "source": []
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3 (ipykernel)",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.12.4"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+#A1
+import os
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+
+# Set up paths (ensure these paths point to the extracted folders)
+train_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Training'
+test_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Testing'
+
+# ImageDataGenerator for preprocessing images
+train_datagen = ImageDataGenerator(rescale=1.0/255.0,
+                                   rotation_range=20,
+                                   width_shift_range=0.2,
+                                   height_shift_range=0.2,
+                                   shear_range=0.2,
+                                   zoom_range=0.2,
+                                   horizontal_flip=True,
+                                   fill_mode='nearest')
+
+test_datagen = ImageDataGenerator(rescale=1.0/255.0)
+
+# Load train and test datasets
+train_generator = train_datagen.flow_from_directory(train_dir,
+                                                    target_size=(150, 150),
+                                                    batch_size=32,
+                                                    class_mode='categorical')
+
+test_generator = test_datagen.flow_from_directory(test_dir,
+                                                  target_size=(150, 150),
+                                                  batch_size=32,
+                                                  class_mode='categorical')
+
+# Build the CNN model
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),
+    MaxPooling2D(pool_size=(2, 2)),
+    
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(4, activation='softmax')  # 4 output classes (glioma, meningioma, notumor, pituitary)
+])
+
+# Compile the model
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model
+history = model.fit(train_generator,
+                    epochs=10,
+                    validation_data=test_generator)
+
+# Evaluate the model
+test_loss, test_acc = model.evaluate(test_generator)
+print(f'Test accuracy: {test_acc:.2f}')
+
+
+#A1(2)
+import os
+import numpy as np
+import pandas as pd
+from PIL import Image
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score
+
+# Define paths to training and testing data
+train_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Training'
+test_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Testing'
+
+# Define classes (subfolders in the directories)
+classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
+
+# Initialize lists to hold feature data (width, height) and labels
+X_train = []
+y_train = []
+X_test = []
+y_test = []
+
+def extract_image_features(image_path):
+    img = Image.open(image_path)
+    img = img.resize((150, 150))  # Resize to a fixed size
+    width, height = img.size
+    return width, height
+
+# Process training images
+for label, class_name in enumerate(classes):
+    class_dir = os.path.join(train_dir, class_name)
+    images = os.listdir(class_dir)
+    
+    for image_name in images:
+        image_path = os.path.join(class_dir, image_name)
+        width, height = extract_image_features(image_path)
+        X_train.append([width, height])  # Use width and height as features
+        y_train.append(label)
+
+# Process testing images
+for label, class_name in enumerate(classes):
+    class_dir = os.path.join(test_dir, class_name)
+    images = os.listdir(class_dir)
+    
+    for image_name in images:
+        image_path = os.path.join(class_dir, image_name)
+        width, height = extract_image_features(image_path)
+        X_test.append([width, height])  # Use width and height as features
+        y_test.append(label)
+
+# Convert lists to NumPy arrays
+X_train = np.array(X_train)
+y_train = np.array(y_train)
+X_test = np.array(X_test)
+y_test = np.array(y_test)
+
+# Standardize features
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Train a logistic regression classifier
+log_reg = LogisticRegression(max_iter=1000)
+log_reg.fit(X_train_scaled, y_train)
+
+# Predict and evaluate on the training and testing sets
+y_train_pred = log_reg.predict(X_train_scaled)
+y_test_pred = log_reg.predict(X_test_scaled)
+
+train_accuracy = accuracy_score(y_train, y_train_pred)
+test_accuracy = accuracy_score(y_test, y_test_pred)
+
+print(f'Training accuracy: {train_accuracy:.2f}')
+print(f'Test accuracy: {test_accuracy:.2f}')
+
+
+
+
+#2
+import numpy as np
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.optimizers import Adam
+from sklearn.metrics import accuracy_score, classification_report
+
+# Update these paths with the actual paths to your directories
+train_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Training'
+test_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Testing'
+
+# Initialize the data generators
+train_datagen = ImageDataGenerator(rescale=1./255)
+test_datagen = ImageDataGenerator(rescale=1./255)
+
+train_generator = train_datagen.flow_from_directory(
+    train_dir,  # Corrected variable name
+    target_size=(150, 150),
+    batch_size=32,
+    class_mode='categorical',
+    shuffle=True  # Shuffle the data during training
+)
+
+test_generator = test_datagen.flow_from_directory(
+    test_dir,  # Corrected variable name
+    target_size=(150, 150),
+    batch_size=32,
+    class_mode='categorical',
+    shuffle=False  # Do not shuffle for evaluation
+)
+
+# Define the CNN model
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),
+    MaxPooling2D(pool_size=(2, 2)),
+    
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(train_generator.num_classes, activation='softmax')
+])
+
+# Compile the model
+model.compile(optimizer=Adam(learning_rate=0.001),
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model
+epochs = 10
+history = model.fit(train_generator, epochs=epochs, validation_data=test_generator)
+
+# Perform predictions on the train and test sets
+y_train_pred = model.predict(train_generator)
+y_test_pred = model.predict(test_generator)
+
+# Extract true labels
+y_train_true = train_generator.classes
+y_test_true = test_generator.classes
+
+# Convert predictions to class labels
+y_train_pred_classes = np.argmax(y_train_pred, axis=1)
+y_test_pred_classes = np.argmax(y_test_pred, axis=1)
+
+# Calculate classification metrics for the train set
+train_accuracy = accuracy_score(y_train_true, y_train_pred_classes)
+train_report = classification_report(y_train_true, y_train_pred_classes, output_dict=True)
+
+# Calculate classification metrics for the test set
+test_accuracy = accuracy_score(y_test_true, y_test_pred_classes)
+test_report = classification_report(y_test_true, y_test_pred_classes, output_dict=True)
+
+# Display the metrics
+print("Train Metrics:")
+print(f"Accuracy: {train_accuracy:.2f}")
+print(f"Classification Report:\n{train_report}")
+
+print("\nTest Metrics:")
+print(f"Accuracy: {test_accuracy:.2f}")
+print(f"Classification Report:\n{test_report}")
+
+
+
+
+#3
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from sklearn.metrics import accuracy_score, classification_report
+import numpy as np
+
+# Initialize the data generators
+train_datagen = ImageDataGenerator(rescale=1./255)
+test_datagen = ImageDataGenerator(rescale=1./255)
+
+# Replace these with the actual paths to your training and test directories
+train_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Training'
+test_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Testing'
+
+# Flow from the correct directory
+train_generator = train_datagen.flow_from_directory(
+    train_dir,  # Updated with actual path
+    target_size=(150, 150),
+    batch_size=32,
+    class_mode='categorical',
+    shuffle=False  # Ensure the order of data is preserved for evaluation
+)
+
+test_generator = test_datagen.flow_from_directory(
+    test_dir,  # Updated with actual path
+    target_size=(150, 150),
+    batch_size=32,
+    class_mode='categorical',
+    shuffle=False  # Ensure the order of data is preserved for evaluation
+)
+
+# You can now proceed with training your model or loading an existing one.
+
+
+
+
+#A5
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import zipfile
+import os
+
+# Path to the uploaded ZIP file
+zip_path = r'C:\Users\manik\Downloads\ML DATASET HENRY.zip'
+
+# Extract the zip file to access the data
+with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+    zip_ref.extractall('/mnt/data/')
+
+# Set up the directories for the extracted Training and Testing data
+train_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Training'
+test_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Testing'
+
+
+# ImageDataGenerator to load images (without augmentation, only rescaling)
+datagen = ImageDataGenerator(rescale=1.0/255.0)
+
+# Load training dataset (without the target labels)
+train_generator = datagen.flow_from_directory(train_dir,
+                                              target_size=(150, 150),
+                                              batch_size=32,
+                                              class_mode=None,  # We ignore labels
+                                              shuffle=False)
+
+# Load testing dataset (without the target labels)
+test_generator = datagen.flow_from_directory(test_dir,
+                                             target_size=(150, 150),
+                                             batch_size=32,
+                                             class_mode=None,  # We ignore labels
+                                             shuffle=False)
+
+# Function to extract features and flatten images
+def extract_and_flatten(generator):
+    X_data = []
+    for i in range(len(generator)):
+        batch = generator[i]  # Get the images (ignore labels)
+        X_data.append(batch)
+    # Convert list of batches into a single array
+    X_data = np.vstack(X_data)
+    # Flatten each image into a 1D array
+    X_data_flat = X_data.reshape(X_data.shape[0], -1)
+    return X_data_flat
+
+# Extract features for training and testing datasets
+X_train_flat = extract_and_flatten(train_generator)
+X_test_flat = extract_and_flatten(test_generator)
+
+# Perform K-Means clustering for training data
+kmeans_train = KMeans(n_clusters=2, random_state=42, n_init="auto").fit(X_train_flat)
+
+# Perform K-Means clustering for testing data
+kmeans_test = KMeans(n_clusters=2, random_state=42, n_init="auto").fit(X_test_flat)
+
+# Calculate metrics for training data
+silhouette_train = silhouette_score(X_train_flat, kmeans_train.labels_)
+ch_train = calinski_harabasz_score(X_train_flat, kmeans_train.labels_)
+db_train = davies_bouldin_score(X_train_flat, kmeans_train.labels_)
+
+# Calculate metrics for testing data
+silhouette_test = silhouette_score(X_test_flat, kmeans_test.labels_)
+ch_test = calinski_harabasz_score(X_test_flat, kmeans_test.labels_)
+db_test = davies_bouldin_score(X_test_flat, kmeans_test.labels_)
+
+# Print the results
+print("Training Data Metrics:")
+print(f"Silhouette Score: {silhouette_train:.4f}")
+print(f"Calinski-Harabasz (CH) Score: {ch_train:.4f}")
+print(f"Davies-Bouldin (DB) Index: {db_train:.4f}")
+
+print("\nTesting Data Metrics:")
+print(f"Silhouette Score: {silhouette_test:.4f}")
+print(f"Calinski-Harabasz (CH) Score: {ch_test:.4f}")
+print(f"Davies-Bouldin (DB) Index: {db_test:.4f}")
+
+
+
+
+
+#A2
+import os
+import numpy as np
+from PIL import Image
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
+from math import sqrt
+
+# Define paths to training and testing data
+train_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Training'
+test_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Testing'
+
+# Define classes (subfolders in the directories)
+classes = ['glioma', 'meningioma', 'notumor', 'pituitary']
+
+# Initialize lists to hold feature data (width, height) and labels
+X_train = []
+y_train = []
+X_test = []
+y_test = []
+
+def extract_image_features(image_path):
+    img = Image.open(image_path)
+    img = img.resize((150, 150))  # Resize to a fixed size
+    width, height = img.size
+    return width, height
+
+# Process training images
+for label, class_name in enumerate(classes):
+    class_dir = os.path.join(train_dir, class_name)
+    images = os.listdir(class_dir)
+    
+    for image_name in images:
+        image_path = os.path.join(class_dir, image_name)
+        width, height = extract_image_features(image_path)
+        X_train.append([width, height])  # Use width and height as features
+        y_train.append(label)
+
+# Process testing images
+for label, class_name in enumerate(classes):
+    class_dir = os.path.join(test_dir, class_name)
+    images = os.listdir(class_dir)
+    
+    for image_name in images:
+        image_path = os.path.join(class_dir, image_name)
+        width, height = extract_image_features(image_path)
+        X_test.append([width, height])  # Use width and height as features
+        y_test.append(label)
+
+# Convert lists to NumPy arrays
+X_train = np.array(X_train)
+y_train = np.array(y_train)
+X_test = np.array(X_test)
+y_test = np.array(y_test)
+
+# Standardize features
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Train a linear regression model
+reg = LinearRegression().fit(X_train_scaled, y_train)
+
+# Predict on training and testing data
+y_train_pred = reg.predict(X_train_scaled)
+y_test_pred = reg.predict(X_test_scaled)
+
+# Calculate metrics for training data
+mse_train = mean_squared_error(y_train, y_train_pred)
+rmse_train = sqrt(mse_train)
+mape_train = mean_absolute_percentage_error(y_train, y_train_pred)
+r2_train = r2_score(y_train, y_train_pred)
+
+# Calculate metrics for testing data
+mse_test = mean_squared_error(y_test, y_test_pred)
+rmse_test = sqrt(mse_test)
+mape_test = mean_absolute_percentage_error(y_test, y_test_pred)
+r2_test = r2_score(y_test, y_test_pred)
+
+# Print metrics
+print("Training Metrics:")
+print(f"MSE: {mse_train:.4f}")
+print(f"RMSE: {rmse_train:.4f}")
+print(f"MAPE: {mape_train:.4f}")
+print(f"R²: {r2_train:.4f}")
+
+print("\nTesting Metrics:")
+print(f"MSE: {mse_test:.4f}")
+print(f"RMSE: {rmse_test:.4f}")
+print(f"MAPE: {mape_test:.4f}")
+print(f"R²: {r2_test:.4f}")
+
+
+
+
+#A4
+import numpy as np
+from sklearn.cluster import KMeans
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import GlobalAveragePooling2D
+
+# Set up paths
+train_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Training'
+
+# Load pre-trained VGG16 model without top layers and include GlobalAveragePooling2D
+base_model = VGG16(weights='imagenet', include_top=False, input_shape=(150, 150, 3))
+x = base_model.output
+x = GlobalAveragePooling2D()(x)
+features = Dense(1024, activation='relu')(x)
+model = Model(inputs=base_model.input, outputs=features)
+
+# Prepare data generator for feature extraction
+datagen = ImageDataGenerator(rescale=1.0/255.0)
+train_generator = datagen.flow_from_directory(train_dir,
+                                              target_size=(150, 150),
+                                              batch_size=32,
+                                              class_mode=None,  # No labels needed for clustering
+                                              shuffle=False)  # Ensure order is consistent
+
+# Extract features using the pre-trained model
+def extract_features(generator):
+    features = []
+    for _ in range(generator.samples // generator.batch_size):
+        x_batch = next(generator)
+        features_batch = model.predict(x_batch)
+        features.append(features_batch)
+    return np.vstack(features)
+
+X_train_features = extract_features(train_generator)
+
+# Flatten the output of the model for clustering
+X_train_flattened = X_train_features.reshape(X_train_features.shape[0], -1)
+
+# Perform K-Means Clustering
+n_clusters = 4  # Number of clusters (change as needed)
+kmeans = KMeans(n_clusters=n_clusters, random_state=0, n_init='auto').fit(X_train_flattened)
+
+# Get cluster labels and cluster centers
+cluster_labels = kmeans.labels_
+cluster_centers = kmeans.cluster_centers_
+
+# Print results
+print(f"Cluster Labels: {np.unique(cluster_labels)}")
+print(f"Cluster Centers Shape: {cluster_centers.shape}")
+
+# Optionally, you can plot the clusters if you reduce dimensionality using PCA or t-SNE for visualization
+
+
+
+
+#A3
+import os
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error, r2_score
+from math import sqrt
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras.applications.vgg16 import preprocess_input
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+
+# Set up paths
+train_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Training'
+test_dir = r'C:\Users\manik\Downloads\ML DATASET HENRY\Testing'
+
+# Feature extraction using a pre-trained CNN
+base_model = VGG16(weights='imagenet', include_top=False, input_shape=(150, 150, 3))
+x = base_model.output
+x = GlobalAveragePooling2D()(x)
+x = Dense(1024, activation='relu')(x)
+model = Model(inputs=base_model.input, outputs=x)
+
+# Prepare data generators for feature extraction
+datagen = ImageDataGenerator(rescale=1.0/255.0)
+train_generator = datagen.flow_from_directory(train_dir,
+                                              target_size=(150, 150),
+                                              batch_size=32,
+                                              class_mode='categorical',
+                                              shuffle=False)
+test_generator = datagen.flow_from_directory(test_dir,
+                                             target_size=(150, 150),
+                                             batch_size=32,
+                                             class_mode='categorical',
+                                             shuffle=False)
+
+# Extract features from the training and testing data
+def extract_features(generator):
+    features = []
+    labels = []
+    for _ in range(generator.samples // generator.batch_size):
+        x_batch, y_batch = next(generator)
+        features_batch = model.predict(x_batch)
+        features.append(features_batch)
+        labels.append(y_batch)
+    return np.vstack(features), np.vstack(labels)
+
+X_train, y_train = extract_features(train_generator)
+X_test, y_test = extract_features(test_generator)
+
+# Flatten the output of VGG16 for regression
+X_train_flattened = X_train.reshape(X_train.shape[0], -1)
+X_test_flattened = X_test.reshape(X_test.shape[0], -1)
+
+# Train a linear regression model
+reg = LinearRegression().fit(X_train_flattened, y_train)
+
+# Predict on training and testing data
+y_train_pred = reg.predict(X_train_flattened)
+y_test_pred = reg.predict(X_test_flattened)
+
+# Convert predictions to appropriate shape for comparison (if needed)
+y_train = y_train.argmax(axis=1)  # Convert one-hot encoded labels to single class indices
+y_test = y_test.argmax(axis=1)
+y_train_pred = np.argmax(y_train_pred, axis=1)  # Get class indices from predictions
+y_test_pred = np.argmax(y_test_pred, axis=1)
+
+# Calculate metrics for training data
+mse_train = mean_squared_error(y_train, y_train_pred)
+rmse_train = sqrt(mse_train)
+mape_train = mean_absolute_percentage_error(y_train, y_train_pred)
+r2_train = r2_score(y_train, y_train_pred)
+
+# Calculate metrics for testing data
+mse_test = mean_squared_error(y_test, y_test_pred)
+rmse_test = sqrt(mse_test)
+mape_test = mean_absolute_percentage_error(y_test, y_test_pred)
+r2_test = r2_score(y_test, y_test_pred)
+
+# Print metrics
+print("Training Metrics:")
+print(f"MSE: {mse_train:.4f}")
+print(f"RMSE: {rmse_train:.4f}")
+print(f"MAPE: {mape_train:.4f}")
+print(f"R²: {r2_train:.4f}")
+
+print("\nTesting Metrics:")
+print(f"MSE: {mse_test:.4f}")
+print(f"RMSE: {rmse_test:.4f}")
+print(f"MAPE: {mape_test:.4f}")
+print(f"R²: {r2_test:.4f}")
+
+
+
+
+
+
