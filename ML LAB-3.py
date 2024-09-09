@@ -3,83 +3,105 @@
 
 # In[13]:
 
-
-import pandas as pd
+#A1 comparing two classes (glioma and meningioma)
+import os
 import numpy as np
+from PIL import Image
+from numpy.linalg import norm
 
-# Load the dataset using the provided file path
-file_path = "C:/Users/year3/Downloads/dataset.xlsx"
-data = pd.read_excel("C:/Users/year3/Downloads/dataset.xlsx")
+# Function to load and preprocess images
+def load_images_from_folder(folder_path, image_size=(128, 128)):
+    images = []
+    for filename in os.listdir(folder_path):
+        img_path = os.path.join(folder_path, filename)
+        try:
+            img = Image.open(img_path).resize(image_size)  # Resize image
+            img_array = np.array(img).astype('float32') / 255.0  # Normalize
+            if len(img_array.shape) == 3:  # Ensure the image has 3 channels (RGB)
+                img_array = img_array.flatten()  # Flatten the image to a 1D vector
+                images.append(img_array)
+        except Exception as e:
+            print(f"Error loading image {img_path}: {e}")
+    return np.array(images, dtype=object)  # Using dtype=object to handle any edge cases
 
-# Separate the features and labels
-features = data.iloc[:, :-1]
-labels = data['LABEL']
+# Function to compute class centroid and spread
+def compute_centroid_and_spread(class_data):
+    # Convert to NumPy array with dtype float32 for mean and std calculation
+    class_data = np.array(class_data, dtype='float32')
+    centroid = class_data.mean(axis=0)  # Mean vector (centroid)
+    spread = class_data.std(axis=0)     # Standard deviation vector (spread)
+    return centroid, spread
 
-# Calculate the intraclass spread (standard deviation within each class)
-intraclass_spread = features.groupby(labels).std().mean()
+# Folder paths for each class in your dataset
+train_folder_path = r"C:\Users\manik\Downloads\ML DATASET HENRY\Training"
+glioma_folder = os.path.join(train_folder_path, 'glioma')
+meningioma_folder = os.path.join(train_folder_path, 'meningioma')
 
-# Calculate the interclass spread (spread between the means of different classes)
-class_means = features.groupby(labels).mean()
-interclass_spread = class_means.std()
+# Load the images for two classes
+glioma_images = load_images_from_folder(glioma_folder)
+meningioma_images = load_images_from_folder(meningioma_folder)
 
-# Output the results
-print("Intraclass Spread:")
-print(intraclass_spread)
+# Check if images were successfully loaded
+if len(glioma_images) > 0 and len(meningioma_images) > 0:
+    # Compute centroids and spreads for each class
+    glioma_centroid, glioma_spread = compute_centroid_and_spread(glioma_images)
+    meningioma_centroid, meningioma_spread = compute_centroid_and_spread(meningioma_images)
 
-print("\nInterclass Spread:")
-print(interclass_spread)
+    # Compute the distance between centroids (interclass distance)
+    centroid_distance = norm(glioma_centroid - meningioma_centroid)
+
+    # Print results
+    print(f"Glioma Centroid Shape: {glioma_centroid.shape}")
+    print(f"Meningioma Centroid Shape: {meningioma_centroid.shape}")
+    print(f"Distance between Glioma and Meningioma Centroids: {centroid_distance:.4f}")
+
+    print(f"Glioma Spread (Standard Deviation): {glioma_spread.mean():.4f}")
+    print(f"Meningioma Spread (Standard Deviation): {meningioma_spread.mean():.4f}")
+else:
+    print("Error: No images loaded for one or both classes.")
 
 
 # In[14]:
 
 
-import pandas as pd
+#A2
 import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+import os
 
-# Load the dataset
-file_path = "C:/Users/year3/Downloads/dataset.xlsx"
-data = pd.read_excel("C:/Users/year3/Downloads/dataset.xlsx")
+# Function to load and preprocess a single image
+def load_single_image(image_path, image_size=(128, 128)):
+    img = Image.open(image_path).resize(image_size)  # Resize the image
+    img_array = np.array(img).astype('float32') / 255.0  # Normalize the pixel values
+    return img_array
 
-# Separate the features and labels
-features = data.iloc[:, :-1].values
-labels = data['LABEL'].values
+# Select one image from the glioma class for analysis
+train_folder_path = r"C:\Users\manik\Downloads\ML DATASET HENRY\Training"
+glioma_folder = os.path.join(train_folder_path, 'glioma')
+sample_image_path = os.path.join(glioma_folder, os.listdir(glioma_folder)[0])
 
-# Get the unique classes
-classes = np.unique(labels)
+# Load and flatten the image (use a specific feature: pixel intensity)
+sample_image = load_single_image(sample_image_path)
+flattened_image = sample_image.flatten()  # Flatten the image to 1D
 
-# Initialize dictionaries to store centroids and spreads
-centroids = {}
-spreads = {}
+# Calculate histogram
+hist, bin_edges = np.histogram(flattened_image, bins=50, range=(0, 1))
 
-# Calculate the mean (centroid) and spread for each class
-for cls in classes:
-    class_features = features[labels == cls]
-    
-    # Calculate the mean (centroid) for the class
-    centroids[cls] = np.mean(class_features, axis=0)
-    
-    # Calculate the spread (standard deviation) for the class
-    spreads[cls] = np.std(class_features, axis=0)
+# Plot the histogram
+plt.hist(flattened_image, bins=50, color='blue', alpha=0.7)
+plt.title('Histogram of Pixel Intensities (Sample Glioma Image)')
+plt.xlabel('Pixel Intensity')
+plt.ylabel('Frequency')
+plt.grid(True)
+plt.show()
 
-# Calculate the distance between mean vectors (centroids) of each pair of classes
-distances = {}
-for i, cls1 in enumerate(classes):
-    for cls2 in classes[i+1:]:
-        distance = np.linalg.norm(centroids[cls1] - centroids[cls2])
-        distances[(cls1, cls2)] = distance
+# Calculate mean and variance of the pixel intensities
+mean_intensity = np.mean(flattened_image)
+variance_intensity = np.var(flattened_image)
 
-# Output the results
-print("Class Centroids (Means):")
-for cls, centroid in centroids.items():
-    print(f"Class {cls}: {centroid}")
-
-print("\nClass Spreads (Standard Deviations):")
-for cls, spread in spreads.items():
-    print(f"Class {cls}: {spread}")
-
-print("\nDistances Between Class Centroids:")
-for pair, distance in distances.items():
-    print(f"Distance between class {pair[0]} and class {pair[1]}: {distance}")
+print(f"Mean Pixel Intensity: {mean_intensity:.4f}")
+print(f"Variance of Pixel Intensity: {variance_intensity:.4f}")
 
 
 # In[15]:
@@ -114,405 +136,360 @@ plt.show()
 
 # In[16]:
 
-
-import pandas as pd
+#A3
 import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
+import os
+from scipy.spatial.distance import minkowski
 
-# Load the dataset
-file_path = "C:/Users/year3/Downloads/dataset.xlsx"
-data = pd.read_excel("C:/Users/year3/Downloads/dataset.xlsx")
+# Function to load and preprocess a single image
+def load_single_image(image_path, image_size=(128, 128)):
+    img = Image.open(image_path).resize(image_size)  # Resize the image
+    img_array = np.array(img).astype('float32') / 255.0  # Normalize the pixel values
+    return img_array.flatten()  # Flatten the image to a 1D vector
 
-# Select two feature vectors (e.g., the first two rows)
-vector1 = data.iloc[0, :-1].values  # Exclude the label column
-vector2 = data.iloc[1, :-1].values  # Exclude the label column
+# Select two images from the glioma class for analysis
+train_folder_path = r"C:\Users\manik\Downloads\ML DATASET HENRY\Training"
+glioma_folder = os.path.join(train_folder_path, 'glioma')
+meningioma_folder = os.path.join(train_folder_path, 'meningioma')
 
-# Function to calculate Minkowski distance
-def minkowski_distance(vec1, vec2, r):
-    return np.sum(np.abs(vec1 - vec2) ** r) ** (1/r)
+# Load two sample images (one from glioma and one from meningioma)
+image1_path = os.path.join(glioma_folder, os.listdir(glioma_folder)[0])
+image2_path = os.path.join(meningioma_folder, os.listdir(meningioma_folder)[0])
 
-# Calculate Minkowski distance for r from 1 to 10
-r_values = np.arange(1, 11)
-distances = [minkowski_distance(vector1, vector2, r) for r in r_values]
+image1_vector = load_single_image(image1_path)
+image2_vector = load_single_image(image2_path)
 
-# Plot the Minkowski distance as a function of r
-plt.plot(r_values, distances, marker='o')
-plt.title('Minkowski Distance between Two Feature Vectors')
-plt.xlabel('r')
+# Calculate Minkowski distances for r from 1 to 10
+r_values = range(1, 11)
+distances = [minkowski(image1_vector, image2_vector, r) for r in r_values]
+
+# Plot the Minkowski distances
+plt.plot(r_values, distances, marker='o', color='b')
+plt.title('Minkowski Distance between Two Feature Vectors (r=1 to 10)')
+plt.xlabel('r (Minkowski Distance Order)')
 plt.ylabel('Distance')
-plt.xticks(r_values)  # Set x-ticks to integers from 1 to 10
 plt.grid(True)
 plt.show()
 
-# Print the distances for each r value
+# Print distances for each value of r
 for r, dist in zip(r_values, distances):
-    print(f"Minkowski distance with r={r}: {dist}")
+    print(f"Minkowski Distance with r={r}: {dist:.4f}")
+
 
 
 # In[20]:
 
-
-import pandas as pd
+#A4
+import os
+import numpy as np
+from PIL import Image
 from sklearn.model_selection import train_test_split
 
-# Load the dataset
-file_path = "C:/Users/year3/Downloads/dataset.xlsx"
-data = pd.read_excel("C:/Users/year3/Downloads/dataset.xlsx")
+# Function to load and preprocess images from a folder
+def load_images_from_folder(folder_path, label, image_size=(128, 128)):
+    images = []
+    labels = []
+    for filename in os.listdir(folder_path):
+        img_path = os.path.join(folder_path, filename)
+        try:
+            img = Image.open(img_path).convert('RGB')  # Ensure the image has 3 channels (RGB)
+            img = img.resize(image_size)  # Resize the image to the specified size
+            img_array = np.array(img).astype('float32') / 255.0  # Normalize pixel values
+            images.append(img_array.flatten())  # Flatten the image to a 1D vector
+            labels.append(label)  # Append the corresponding label
+        except Exception as e:
+            print(f"Error loading image {img_path}: {e}")
+    return np.array(images), np.array(labels)
 
-# Separate the features and labels
-X = data.iloc[:, :-1].values  # All rows, all columns except the last (features)
-y = data['LABEL'].values      # All rows, last column (labels)
+# Folder paths for the two selected classes (glioma and meningioma)
+train_folder_path = r"C:\Users\manik\Downloads\ML DATASET HENRY\Training"
+glioma_folder = os.path.join(train_folder_path, 'glioma')
+meningioma_folder = os.path.join(train_folder_path, 'meningioma')
 
-# Split the dataset into training and testing sets (70% train, 30% test)
+# Load the glioma class (label=0) and meningioma class (label=1)
+glioma_images, glioma_labels = load_images_from_folder(glioma_folder, label=0)
+meningioma_images, meningioma_labels = load_images_from_folder(meningioma_folder, label=1)
+
+# Combine the images and labels for the two classes
+X = np.concatenate([glioma_images, meningioma_images], axis=0)
+y = np.concatenate([glioma_labels, meningioma_labels], axis=0)
+
+# Split the dataset into training (70%) and testing (30%) sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Print the shape of the resulting datasets
-print("X_train shape:", X_train.shape)
-print("X_test shape:", X_test.shape)
-print("y_train shape:", y_train.shape)
-print("y_test shape:", y_test.shape)
+# Print the shapes of the resulting datasets
+print(f"Training data shape: {X_train.shape}")
+print(f"Test data shape: {X_test.shape}")
+print(f"Training labels shape: {y_train.shape}")
+print(f"Test labels shape: {y_test.shape}")
+
 
 
 # In[32]:
 
-
-import pandas as pd
+#A5 A6 A7
+import os
 import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
+from PIL import Image
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
 
-file_path = "C:/Users/year3/Downloads/dataset.xlsx"
+# Function to load and preprocess images from a folder
+def load_images_from_folder(folder_path, label, image_size=(128, 128)):
+    images = []
+    labels = []
+    for filename in os.listdir(folder_path):
+        img_path = os.path.join(folder_path, filename)
+        try:
+            img = Image.open(img_path).convert('RGB')  # Ensure 3 channels (RGB)
+            img = img.resize(image_size)  # Resize the image
+            img_array = np.array(img).astype('float32') / 255.0  # Normalize pixel values
+            images.append(img_array.flatten())  # Flatten the image to 1D vector
+            labels.append(label)  # Append corresponding label
+        except Exception as e:
+            print(f"Error loading image {img_path}: {e}")
+    return np.array(images), np.array(labels)
 
+# Folder paths for the two selected classes (glioma and meningioma)
+train_folder_path = r"C:\Users\manik\Downloads\ML DATASET HENRY\Training"
+glioma_folder = os.path.join(train_folder_path, 'glioma')
+meningioma_folder = os.path.join(train_folder_path, 'meningioma')
 
-try:
-    # Load the dataset
-    df = pd.read_excel(file_path)
-    print("Data loaded successfully.")
-    
-    # Display the first few rows of the dataframe to understand its structure
-    print(df.head())
+# Load the glioma class (label=0) and meningioma class (label=1)
+glioma_images, glioma_labels = load_images_from_folder(glioma_folder, label=0)
+meningioma_images, meningioma_labels = load_images_from_folder(meningioma_folder, label=1)
 
-    # Replace 'target_column' with the actual name of your target column
-    # Replace 'feature_columns' with the actual names of your feature columns
-    # For example: X = df[['feature1', 'feature2']] and y = df['target_column']
-    
-    # If column names are numbers or you don't have headers in the file, use index-based access
-    # For example: X = df.iloc[:, :-1] and y = df.iloc[:, -1]
+# Combine the images and labels for the two classes
+X = np.concatenate([glioma_images, meningioma_images], axis=0)
+y = np.concatenate([glioma_labels, meningioma_labels], axis=0)
 
-    # Replace 'target_column' with the actual column name in your dataset
-    target_column = 'target_column'  # Change this to your actual target column name
-    feature_columns = df.columns[df.columns != target_column]
-    
-    X = df[feature_columns]
-    y = df[target_column]
+# Split the dataset into training (70%) and testing (30%) sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    # Split the dataset into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+# Train the kNN classifier with k=3
+neigh = KNeighborsClassifier(n_neighbors=3)
+neigh.fit(X_train, y_train)
 
-    # Optionally, scale the features
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+# Make predictions on the test set
+y_pred = neigh.predict(X_test)
 
-    # Initialize the kNN classifier with k=3
-    neigh = KNeighborsClassifier(n_neighbors=3)
+# Calculate the accuracy of the classifier
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy of kNN classifier (k=3): {accuracy:.4f}")
 
-    # Fit the classifier to the training data
-    neigh.fit(X_train, y_train)
-
-    # Evaluate the classifier on the test set
-    accuracy = neigh.score(X_test, y_test)
-    print(f"Accuracy on the test set: {accuracy:.2f}")
-
-except Exception as e:
-    print(f"An error occurred: {e}")
 
 
 # In[37]:
 
-
+#A8
+import zipfile
+import os
 import numpy as np
-import pandas as pd
+from PIL import Image
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
- 
-# Load the dataset
-file_path = "C:/Users/year3/Downloads/dataset.xlsx"
-data = pd.read_excel(file_path)
- 
-# Identify the class label column and feature columns
-class_column = data.columns[-1]
-feature_columns = data.columns[:-1]
- 
-# Get the unique classes in the dataset
-unique_classes = data[class_column].unique()
- 
-# Filter the dataset to include only the first two classes
-filtered_data = data[data[class_column].isin(unique_classes[:2])]
- 
-# Separate features and labels
-X = filtered_data[feature_columns].values
-y = filtered_data[class_column].values
- 
-# Split the data into training and testing sets (80% train, 20% test)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
- 
-# Standardize the features (important for kNN)
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
+
+# Step 1: Load the ZIP file and extract its contents
+zip_file_path = r"C:\Users\manik\Downloads\ML DATASET HENRY.zip"  # Update this to the actual ZIP file path
+extract_dir = r"C:\Users\manik\Downloads\ML_DATASET_HENRY_Extracted"  # Directory where files will be extracted
+
+if not os.path.isfile(zip_file_path):
+    raise FileNotFoundError(f"The file {zip_file_path} does not exist or is not a valid file.")
+
+with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+    zip_ref.extractall(extract_dir)
+
+# Step 2: Define paths to training and testing directories
+train_dir = os.path.join(extract_dir, 'Training')
+test_dir = os.path.join(extract_dir, 'Testing')
+
+# Define classes (subfolders in the training directory)
+classes = [d for d in os.listdir(train_dir) if os.path.isdir(os.path.join(train_dir, d))]
+
+# Initialize lists to hold feature data (X, Y) and labels
+X_train = []
+Y_train = []
+labels = []
+
+def extract_image_features(image_path):
+    img = Image.open(image_path)
+    img = img.resize((64, 64))  # Resize to a fixed size (optional)
+    width, height = img.size  # Take width and height as features
+    return width, height
+
+# Function to process images in a directory
+def process_images(directory, labels_list):
+    X = []
+    Y = []
+    y = []
+    for label, class_name in enumerate(classes):
+        class_dir = os.path.join(directory, class_name)
+        images = os.listdir(class_dir)
+        
+        # Process each image in the class directory
+        for image_name in images:
+            image_path = os.path.join(class_dir, image_name)
+            width, height = extract_image_features(image_path)
+            X.append(width)
+            Y.append(height)
+            y.append(label)
+    return np.array(X), np.array(Y), np.array(y)
+
+# Process training and testing images
+X_train, Y_train, labels = process_images(train_dir, labels)
+X_test, Y_test, test_labels = process_images(test_dir, labels)
+
+# Combine features for training and testing
+train_data = np.column_stack((X_train, Y_train))
+test_data = np.column_stack((X_test, Y_test))
+
+# Step 3: Split the training data into train and validation sets
+X_train, X_val, y_train, y_val = train_test_split(train_data, labels, test_size=0.2, random_state=42)
+
+# Step 4: Scale the features for better performance in kNN
 scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
- 
-# Create the kNN classifier with k=3 (you can choose any other value for k)
-neigh = KNeighborsClassifier(n_neighbors=3)
- 
-# Train the classifier
-neigh.fit(X_train, y_train)
- 
-# Test the classifier and get the accuracy
-accuracy = neigh.score(X_test, y_test)
- 
-# Output the accuracy
-print(f"Accuracy of kNN on the test set: {accuracy:.2f}")
+X_train_scaled = scaler.fit_transform(X_train)
+X_val_scaled = scaler.transform(X_val)
+test_data_scaled = scaler.transform(test_data)
+
+# Step 5: Train and evaluate k-NN classifiers
+k_values = list(range(1, 12))
+accuracies = []
+
+for k in k_values:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train_scaled, y_train)
+    
+    # Validate on the validation set
+    y_val_pred = knn.predict(X_val_scaled)
+    accuracy_val = accuracy_score(y_val, y_val_pred)
+    accuracies.append(accuracy_val)
+
+    # Test on the test set
+    y_test_pred = knn.predict(test_data_scaled)
+    accuracy_test = accuracy_score(test_labels, y_test_pred)
+    print(f"Accuracy for k={k} (Validation Set): {accuracy_val}")
+    print(f"Accuracy for k={k} (Test Set): {accuracy_test}")
+
+# Step 6: Plot accuracy for different values of k
+plt.figure(figsize=(10, 6))
+plt.plot(k_values, accuracies, marker='o', linestyle='-', color='b')
+plt.title('Accuracy vs. k in k-NN Classifier')
+plt.xlabel('k')
+plt.ylabel('Accuracy')
+plt.xticks(k_values)
+plt.grid(True)
+plt.show()
+
 
 
 # In[38]:
 
 
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
- 
-file_path = "C:/Users/year3/Downloads/dataset.xlsx"
-data = pd.read_excel(file_path)
- 
-# Identify the class label column and feature columns
-class_column = data.columns[-1]
-feature_columns = data.columns[:-1]
- 
-# Get the unique classes in the dataset
-unique_classes = data[class_column].unique()
- 
-# Filter the dataset to include only the first two classes
-filtered_data = data[data[class_column].isin(unique_classes[:2])]
- 
-# Separate features and labels
-X = filtered_data[feature_columns].values
-y = filtered_data[class_column].values
- 
-# Split the data into training and testing sets (80% train, 20% test)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
- 
-# Standardize the features (important for kNN)
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
- 
-# Create the kNN classifier with k=3 (you can choose any other value for k)
-neigh = KNeighborsClassifier(n_neighbors=3)
- 
-# Train the classifier
-neigh.fit(X_train, y_train)
- 
-# Predict the class for each vector in the test set
-y_pred = neigh.predict(X_test)
- 
-# Output the predictions along with the actual labels
-print("Predicted classes for test set:", y_pred)
-print("Actual classes for test set:   ", y_test)
- 
-# To predict a single test vector, e.g., the first one in the test set
-test_vect = X_test[0]
-predicted_class = neigh.predict([test_vect])
- 
-print(f"Predicted class for the first test vector: {predicted_class[0]}")
-print(f"Actual class for the first test vector: {y_test[0]}")
-
-
-# In[40]:
-
-
-import numpy as np
-
-import pandas as pd
-
-from sklearn.model_selection import train_test_split
-
-from sklearn.neighbors import KNeighborsClassifier
-
-from sklearn.preprocessing import StandardScaler
-
-import matplotlib.pyplot as plt
- 
-# Load the dataset
-
-file_path = "C:/Users/year3/Downloads/dataset.xlsx"
-data = pd.read_excel(file_path)
- 
-# Identify the class label column and feature columns
-
-class_column = data.columns[-1]
-
-feature_columns = data.columns[:-1]
- 
-# Get the unique classes in the dataset
-
-unique_classes = data[class_column].unique()
- 
-# Filter the dataset to include only the first two classes
-
-filtered_data = data[data[class_column].isin(unique_classes[:2])]
- 
-# Separate features and labels
-
-X = filtered_data[feature_columns].values
-
-y = filtered_data[class_column].values
- 
-# Split the data into training and testing sets (80% train, 20% test)
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
- 
-# Standardize the features (important for kNN)
-
-scaler = StandardScaler()
-
-X_train = scaler.fit_transform(X_train)
-
-X_test = scaler.transform(X_test)
- 
-# List to store accuracy results
-
-accuracy_results = []
- 
-# Iterate over different values of k (from 1 to 11)
-
-for k in range(1, 12):
-
-    # Create the kNN classifier with the current value of k
-
-    neigh = KNeighborsClassifier(n_neighbors=k)
-
-    # Train the classifier
-
-    neigh.fit(X_train, y_train)
-
-    # Test the classifier and get the accuracy
-
-    accuracy = neigh.score(X_test, y_test)
-
-    # Store the accuracy result
-
-    accuracy_results.append(accuracy)
- 
-    print(f"Accuracy with k={k}: {accuracy:.2f}")
- 
-# Plot the accuracy results
-
-plt.figure(figsize=(10, 6))
-
-plt.plot(range(1, 12), accuracy_results, marker='o', linestyle='-', color='b')
-
-plt.title('k-NN Accuracy for Different Values of k')
-
-plt.xlabel('k')
-
-plt.ylabel('Accuracy')
-
-plt.xticks(range(1, 12))
-
-plt.grid(True)
-
-plt.show()
-
- 
-
-
-# In[41]:
-
-
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
+#A9
+import zipfile
+import os
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
- 
-# Load the dataset
-file_path = "C:/Users/year3/Downloads/dataset.xlsx"
-data = pd.read_excel(file_path)
- 
-# Identify the class label column and feature columns
-class_column = data.columns[-1]
-feature_columns = data.columns[:-1]
- 
-# Get the unique classes in the dataset
-unique_classes = data[class_column].unique()
- 
-# Filter the dataset to include only the first two classes
-filtered_data = data[data[class_column].isin(unique_classes[:2])]
- 
-# Separate features and labels
-X = filtered_data[feature_columns].values
-y = filtered_data[class_column].values
- 
-# Split the data into training and testing sets (80% train, 20% test)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
- 
-# Standardize the features (important for kNN)
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
- 
-# Create the kNN classifier with a chosen k, e.g., k=3
-neigh = KNeighborsClassifier(n_neighbors=3)
- 
-# Train the classifier
-neigh.fit(X_train, y_train)
- 
-# Predict on both training and test data
-y_train_pred = neigh.predict(X_train)
-y_test_pred = neigh.predict(X_test)
- 
-# Calculate the confusion matrix for training data
-conf_matrix_train = confusion_matrix(y_train, y_train_pred)
-print("Confusion Matrix (Training Data):\n", conf_matrix_train)
- 
-# Calculate the confusion matrix for test data
-conf_matrix_test = confusion_matrix(y_test, y_test_pred)
-print("Confusion Matrix (Test Data):\n", conf_matrix_test)
- 
-# Calculate and print classification report (precision, recall, F1-score) for training data
-print("Classification Report (Training Data):")
-print(classification_report(y_train, y_train_pred))
- 
-# Calculate and print classification report (precision, recall, F1-score) for test data
-print("Classification Report (Test Data):")
-print(classification_report(y_test, y_test_pred))
- 
-# Evaluate the model's learning outcome based on the metrics
-train_accuracy = neigh.score(X_train, y_train)
-test_accuracy = neigh.score(X_test, y_test)
- 
-print(f"Training Accuracy: {train_accuracy:.2f}")
-print(f"Test Accuracy: {test_accuracy:.2f}")
- 
-if train_accuracy > test_accuracy:
-    if test_accuracy < 0.70:  # Assuming a threshold for significant performance drop
-        print("The model may be overfitting.")
-    else:
-        print("The model is well-fitted.")
-elif train_accuracy < test_accuracy:
-    print("The model may be underfitting.")
-else:
-    print("The model is well-fitted.")
+import numpy as np
+import matplotlib.pyplot as plt
 
+# Step 1: Extract the ZIP file
+zip_file_path = r'C:\Users\manik\Downloads\ML DATASET HENRY.zip'
+extract_dir = r'C:\Users\manik\Downloads\ML_DATASET_HENRY_Extracted'
 
-# In[ ]:
+# Ensure the extraction directory exists
+if not os.path.exists(extract_dir):
+    os.makedirs(extract_dir)
 
+# Extract the images
+with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+    zip_ref.extractall(extract_dir)
 
+# Step 2: Set up directories for training and testing
+train_dir = os.path.join(extract_dir, 'Training')  # Assuming 'Training' folder exists in the ZIP
+test_dir = os.path.join(extract_dir, 'Testing')    # Assuming 'Testing' folder exists in the ZIP
 
+# Step 3: ImageDataGenerator to load images
+img_width, img_height = 150, 150
+batch_size = 32
 
+train_datagen = ImageDataGenerator(rescale=1./255)
+test_datagen = ImageDataGenerator(rescale=1./255)
+
+train_generator = train_datagen.flow_from_directory(
+    train_dir,
+    target_size=(img_width, img_height),
+    batch_size=batch_size,
+    class_mode='categorical'
+)
+
+test_generator = test_datagen.flow_from_directory(
+    test_dir,
+    target_size=(img_width, img_height),
+    batch_size=batch_size,
+    class_mode='categorical',
+    shuffle=False
+)
+
+# Step 4: Build a CNN model
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(img_width, img_height, 3)),
+    MaxPooling2D(pool_size=(2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dense(train_generator.num_classes, activation='softmax')  # Automatically set to the number of classes
+])
+
+# Step 5: Compile the model
+model.compile(optimizer=Adam(), loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Step 6: Train the model
+history = model.fit(train_generator, epochs=10, validation_data=test_generator)
+
+# Step 7: Evaluate and predict
+Y_pred = model.predict(test_generator)
+y_pred = np.argmax(Y_pred, axis=1)
+
+# True labels
+y_true = test_generator.classes
+
+# Confusion matrix and classification report
+cm = confusion_matrix(y_true, y_pred)
+print('Confusion Matrix')
+print(cm)
+
+target_names = list(test_generator.class_indices.keys())
+report = classification_report(y_true, y_pred, target_names=target_names)
+print('Classification Report')
+print(report)
+
+# Plot confusion matrix
+def plot_confusion_matrix(cm, classes, title='Confusion Matrix', cmap=plt.cm.Blues):
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.tight_layout()
+
+plt.figure(figsize=(8, 8))
+plot_confusion_matrix(cm, classes=target_names)
+plt.show()
