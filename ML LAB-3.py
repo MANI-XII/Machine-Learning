@@ -441,7 +441,7 @@ test_generator = test_datagen.flow_from_directory(
     shuffle=False
 )
 
-# Step 4: Build a CNN model
+# Step 4: Build a  model
 model = Sequential([
     Conv2D(32, (3, 3), activation='relu', input_shape=(img_width, img_height, 3)),
     MaxPooling2D(pool_size=(2, 2)),
